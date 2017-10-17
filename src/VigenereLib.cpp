@@ -20,120 +20,43 @@ namespace VigenereLib {
 		return ( vigenereSharedArea.occurencesCounter[currentKey*256+i2] - vigenereSharedArea.occurencesCounter[currentKey*256+i1] );
 	}
 	
-	static void ImprimrCharMaisComum(int index)
+	static void PrintByteInISO_IEC_8859_1(unsigned char index)
 	{
-		switch(index):
+		if(index < 0x7f)
 		{
-			case (0):
-				printf(" ");
-				break;
-			case (1):
-				printf("e");
-				break;
-			case (2):
-				printf("a");
-				break;
-			case (3):
-				printf("o");
-				break;
-			case (4):
-				printf("r");
-				break;
-			case (5):
-				printf("s");
-				break;
-			case (6):
-				printf("d");
-				break;
-			case (7):
-				printf("n");
-				break;
-			case (8):
-				printf("t");
-				break;
-			case (9):
-				printf("m");
-				break;
-			case (10):
-				printf("i");
-				break;
-			case (11):
-				printf("p");
-				break;
-			case (12):
-				printf("c");
-				break;
-			case (13):
-				printf("g");
-				break;
-			case (14):
-				printf("l");
-				break;
-			case (15):
-				printf("u");
-				break;
-			case (16):
-				printf("ç");
-				break;
-			case (17):
-				printf("v");
-				break;
-			case (18):
-				printf("ã");
-				break;
-			case (19):
-				printf("f");
-				break;
-			case (20):
-				printf(",");
-				break;
-			case (21):
-				printf("b");
-				break;
-			case (22):
-				printf(".");
-				break;
-			case (23):
-				printf("q");
-				break;
-			case (24):
-				printf("é");
-				break;
-			case (25):
-				printf("í");
-				break;
-			case (26):
-				printf("-");
-				break;
-			case (27):
-				printf("E");
-				break;
-			case (28):
-				printf("U");
-				break;
-			case (29):
-				printf("h");
-				break;
-			case (30):
-				printf("j");
-				break;
-			case (31):
-				printf("w");
-				break;
-			case (32):
-				printf("x");
-				break;
-			case (33):
-				printf("á");
-				break;
-			case (34):
-				printf("ó");
-				break;
-			case (35):
-				printf("ô");
-				break;
-			default:
-				printf("?");
+			printf("%c", index);
+		}
+		else if(0xe7 == index)
+		{
+			printf("ç");
+		}
+		else if(0xe3 == index)
+		{
+			printf("ã");
+		}
+		else if(0xe9 == index)
+		{
+			printf("é");
+		}
+		else if(0xed == index)
+		{
+			printf("í");
+		}
+		else if(0xe1 == index)
+		{
+			printf("á");
+		}
+		else if(0xf3 == index)
+		{
+			printf("ó");
+		}
+		else if(0xf5 == index)
+		{
+			printf("õ");
+		}
+		else
+		{
+			printf("[whot?]");
 		}
 	}
 	
@@ -228,9 +151,28 @@ namespace VigenereLib {
 			}
 		}
 		
+		char sp= ' ';
+		printf("Chave mais provável: ");
+		unsigned char *key= (unsigned char*)malloc(keySize* sizeof (unsigned int));
+		if(NULL == key)
+		{
+			fprintf(stderr, "[ERROR] %s | %s : %d \t Memory allocation fail.\n", __FILE__, __func__, __LINE__ );
+			return;
+		}
+		for(int i=0; i< keySize; i++)
+		{
+			key[i]= sp ^ (unsigned char)sortedIdexes[i];
+			printf("%c", key[i]);
+		}
+		printf("\n");
 		
+		printf("provável resposta: \n");
+		for(int i=0; i < numOfLines; i++)
+		{
+			PrintByteInISO_IEC_8859_1(key[i% keySize] ^ chipheredText[i]);
+		}
 		
-		
+		free(key);
 		free(occurencesCounter);
 		free(chipheredText);
 	}
