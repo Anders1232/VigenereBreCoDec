@@ -20,7 +20,7 @@ namespace VigenereLib {
 		return ( vigenereSharedArea.occurencesCounter[currentKey*256+i2] - vigenereSharedArea.occurencesCounter[currentKey*256+i1] );
 	}
 	
-	static void PrintByteInISO_IEC_8859_1(unsigned char index)
+	static bool PrintByteInISO_IEC_8859_1(unsigned char index)
 	{
 		if(index < 0x7f)
 		{
@@ -57,7 +57,9 @@ namespace VigenereLib {
 		else
 		{
 			printf("[whot?]");
+			return false;
 		}
+		return true;
 	}
 	
 //	Code(char* fileToCode, char* fileWithKey);
@@ -107,6 +109,7 @@ namespace VigenereLib {
 				}
 			}
 		}
+#ifdef SHOW_REPETITIONS_PER_GAP
 		printf("Number of repetitions per gap:\n");
 		float media=0;
 		for(int count=0; count < numOfLines/2; count++)
@@ -114,9 +117,10 @@ namespace VigenereLib {
 			printf("%d:\t%d\n", count, repetitions[count]);
 			media+= (float)repetitions[count];
 		}
-		free(repetitions);
 		media = media /(numOfLines/2);
 		printf("media= %f\n", media);
+#endif
+		free(repetitions);
 		int keySize;
 		printf("Please enter key size: ");
 		scanf("%d", &keySize);
@@ -145,10 +149,12 @@ namespace VigenereLib {
 			printf("section %d of %d:\n", i, keySize);
 			vigenereSharedArea.currentKey= i;
 			qsort(sortedIdexes, 256, sizeof(int), CompareByOccurences);
+#ifdef SHOW_CHAR_REPETITION
 			for(int j=0; j< 256; j++)
 			{
 				printf("%d\tis repeated \t%d\n", sortedIdexes[j], occurencesCounter[i*256+ sortedIdexes[j]] );
 			}
+#endif
 		}
 		
 		char sp= ' ';
@@ -166,11 +172,40 @@ namespace VigenereLib {
 		}
 		printf("\n");
 		
+//		key[0]= 'e' ^ (unsigned char) sortedIdexes[0];
+		
 		printf("provável resposta: \n");
+		int *decodeHitRate= (int*)malloc(keySize*sizeof(int));
+		if(NULL == decodeHitRate)
+		{
+			fprintf(stderr, "[ERROR] %s | %s : %d \t Memory allocation fail.\n", __FILE__, __func__, __LINE__ );
+			return;
+		}
+		memset(decodeHitRate, 0, keySize* sizeof(int));
+		int *decodeTotal= (int*)malloc(keySize*sizeof(int));
+		if(NULL == decodeTotal)
+		{
+			fprintf(stderr, "[ERROR] %s | %s : %d \t Memory allocation fail.\n", __FILE__, __func__, __LINE__ );
+			return;
+		}
+		memset(decodeTotal, 0, keySize* sizeof(int));
 		for(int i=0; i < numOfLines; i++)
 		{
-			PrintByteInISO_IEC_8859_1(key[i% keySize] ^ chipheredText[i]);
+			if(PrintByteInISO_IEC_8859_1(key[i% keySize] ^ chipheredText[i]) )
+			{
+				(decodeHitRate[i%keySize] )++;
+			}
+			(decodeTotal[i%keySize])++;
+			
 		}
+		
+		printf("\nDecode hit rate: \n");
+		for(int i=0; i< keySize; i++)
+		{
+			printf("[%d]:\t%d/%d\n", i, decodeHitRate[i], decodeTotal[i]);
+		}
+		free(decodeHitRate);
+		free(decodeTotal);
 		
 		free(key);
 		free(occurencesCounter);
