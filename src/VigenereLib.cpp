@@ -4,6 +4,9 @@
 #include <stdio.h>
 #include <string.h>
 
+//#define SHOW_REPETITIONS_PER_GAP
+//#define SHOW_CHAR_REPETITION
+
 namespace VigenereLib {
 	struct VigenereSharedArea{
 		int currentKey;
@@ -20,9 +23,12 @@ namespace VigenereLib {
 		return ( vigenereSharedArea.occurencesCounter[currentKey*256+i2] - vigenereSharedArea.occurencesCounter[currentKey*256+i1] );
 	}
 	
+//	static bool PrintByteInISO_IEC_8859_15(unsigned char index)
+
+	
 	static bool PrintByteInISO_IEC_8859_1(unsigned char index)
 	{
-		if(index < 0x7f)
+		if(index < 0x7f &&  index >= 32 )
 		{
 			printf("%c", index);
 		}
@@ -50,13 +56,18 @@ namespace VigenereLib {
 		{
 			printf("ó");
 		}
+		else if(0xf4 == index)
+		{
+			printf("ô");
+		}
 		else if(0xf5 == index)
 		{
 			printf("õ");
 		}
 		else
 		{
-			printf("[whot?]");
+			printf("?");
+//			printf("[whot?]");
 			return false;
 		}
 		return true;
@@ -144,6 +155,18 @@ namespace VigenereLib {
 			sortedIdexes[i]= i;
 		}
 		vigenereSharedArea.occurencesCounter= occurencesCounter;
+
+		char sp= ' ';
+		unsigned char *key= (unsigned char*)malloc(keySize* sizeof (unsigned int));
+		if(NULL == key)
+		{
+			fprintf(stderr, "[ERROR] %s | %s : %d \t Memory allocation fail.\n", __FILE__, __func__, __LINE__ );
+			return;
+		}
+		for(int i=0; i< keySize; i++)
+		{
+		}
+		
 		for(int i=0; i < keySize; i++)
 		{
 			printf("section %d of %d:\n", i, keySize);
@@ -155,24 +178,38 @@ namespace VigenereLib {
 				printf("%d\tis repeated \t%d\n", sortedIdexes[j], occurencesCounter[i*256+ sortedIdexes[j]] );
 			}
 #endif
+			if(0 ==i)
+			{
+				key[i]= ' ' ^ (unsigned char)sortedIdexes[0];
+			}
+			else if(1 ==i)
+			{
+				key[i]= ' ' ^ (unsigned char)sortedIdexes[3];
+			}
+			else if(2 ==i)
+			{
+				key[i]= 'e' ^ (unsigned char)sortedIdexes[1];
+			}
+			else if(5 ==i)
+			{
+				key[i]= 'a' ^ (unsigned char)sortedIdexes[1];
+			}
+			else
+			{
+				key[i]= sp ^ (unsigned char)sortedIdexes[0];
+			}
+			
 		}
-		
-		char sp= ' ';
-		printf("Chave mais provável: ");
-		unsigned char *key= (unsigned char*)malloc(keySize* sizeof (unsigned int));
-		if(NULL == key)
-		{
-			fprintf(stderr, "[ERROR] %s | %s : %d \t Memory allocation fail.\n", __FILE__, __func__, __LINE__ );
-			return;
-		}
-		for(int i=0; i< keySize; i++)
-		{
-			key[i]= sp ^ (unsigned char)sortedIdexes[i];
-			printf("%c", key[i]);
-		}
-		printf("\n");
 		
 //		key[0]= 'e' ^ (unsigned char) sortedIdexes[0];
+//		key[6]= 'e' ^ (unsigned char) sortedIdexes[0];
+		printf("Chave mais provável: \n");
+		for(int i=0; i< keySize; i++)
+		{
+			PrintByteInISO_IEC_8859_1(key[i]);
+			printf("\t%d\n", key[i], key[i]);
+		}
+		printf("\n");
 		
 		printf("provável resposta: \n");
 		int *decodeHitRate= (int*)malloc(keySize*sizeof(int));
